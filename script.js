@@ -71,9 +71,9 @@ class Cycling extends Workout {
   }
 }
 
-const run1 = new Running([39, -12], 5.2, 24, 178);
-const cycling1 = new Cycling([39, -12], 27, 95, 523);
-console.log(run1, cycling1);
+// const run1 = new Running([39, -12], 5.2, 24, 178);
+// const cycling1 = new Cycling([39, -12], 27, 95, 523);
+// // console.log(run1, cycling1);
 
 ///////////////////////////////////////////
 ///APLICATION ARCHITECTURE
@@ -93,7 +93,13 @@ class App {
   #workouts = [];
 
   constructor() {
+    ////get user's position
     this._getPosition();
+
+    ////Get data grom local storage
+    this._getLocalStorage();
+
+    /////Attach event handlers
     form.addEventListener('submit', this._newWorkout.bind(this));
     inputType.addEventListener('change', this._toggleElevationField);
     containerWorkouts.addEventListener('click', this._moveToPopup.bind(this));
@@ -114,7 +120,6 @@ class App {
     console.log(`https://www.google.com/maps/@${latitude},${longitude}`);
 
     const coords = [latitude, longitude];
-    console.log(this);
 
     this.#map = L.map('map').setView(coords, this.#mapZoomLevel);
     //   console.log(map);
@@ -125,6 +130,10 @@ class App {
     }).addTo(this.#map);
     ////// Handling clicks on map
     this.#map.on('click', this._showForm.bind(this));
+
+    this.#workouts.forEach(work => {
+      this._renderWorkoutMarker(work);
+    });
   }
 
   _showForm(mapE) {
@@ -195,7 +204,6 @@ class App {
 
     ///add new object to workout array
     this.#workouts.push(workout);
-    console.log(workout);
 
     ///rended workout on map as marker
     this._renderWorkoutMarker(workout);
@@ -204,6 +212,9 @@ class App {
 
     ///hide form + clear fields
     this._hideForm();
+
+    ////set local storage to all workouts
+    this._setLocalStorage();
   }
 
   _renderWorkoutMarker(workout) {
@@ -279,7 +290,7 @@ class App {
     const workout = this.#workouts.find(
       work => work.id === workoutEl.dataset.id
     );
-    console.log(workout);
+
     this.#map.setView(workout.coords, this.#mapZoomLevel, {
       animate: true,
       pan: {
@@ -289,7 +300,21 @@ class App {
 
     /////usinhe the publice interface
 
-    workout.click();
+    // workout.click();
+  }
+  _setLocalStorage() {
+    localStorage.setItem('workouts', JSON.stringify(this.#workouts));
+  }
+  _getLocalStorage() {
+    const data = JSON.parse(localStorage.getItem('workouts'));
+    console.log(data);
+
+    if (!data) return;
+
+    this.#workouts = data;
+    this.#workouts.forEach(work => {
+      this._renderWorkout(work);
+    });
   }
 }
 
